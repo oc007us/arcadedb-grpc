@@ -850,7 +850,9 @@ function dropProperty(type, property) {
           },
         })
         .done(function (data) {
-          updateDatabases();
+          displaySchema(function () {
+            if (type) showTypeDetail(type);
+          });
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
           globalNotifyError(jqXHR.responseText);
@@ -859,7 +861,7 @@ function dropProperty(type, property) {
   );
 }
 
-function dropIndex(indexName) {
+function dropIndex(indexName, type) {
   let database = getCurrentDatabase();
   if (database == "") {
     globalNotify("Error", "Database not selected", "danger");
@@ -885,7 +887,9 @@ function dropIndex(indexName) {
           },
         })
         .done(function (data) {
-          updateDatabases();
+          displaySchema(function () {
+            if (type) showTypeDetail(type);
+          });
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
           globalNotifyError(jqXHR.responseText);
@@ -2930,7 +2934,7 @@ function fetchSchemaTypes(callback) {
     });
 }
 
-function displaySchema() {
+function displaySchema(onReady) {
   fetchSchemaTypes(function (types) {
     // Build sub-types map
     let subTypes = {};
@@ -3009,11 +3013,14 @@ function displaySchema() {
         html += renderGavSidebarBadges(gavs || [], false);
         html += "</div>";
         $("#dbTypeBadges").html(html);
+        if (onReady) onReady();
       });
     });
 
-    // Reset detail panel
-    $("#dbTypeDetail").html("<div class='db-type-empty'><i class='fa fa-database' style='font-size: 2rem; color: #ddd; margin-bottom: 12px; display: block;'></i>Select a type from the sidebar to view its schema.</div>");
+    if (!onReady) {
+      // Reset detail panel
+      $("#dbTypeDetail").html("<div class='db-type-empty'><i class='fa fa-database' style='font-size: 2rem; color: #ddd; margin-bottom: 12px; display: block;'></i>Select a type from the sidebar to view its schema.</div>");
+    }
   });
 }
 
@@ -3369,7 +3376,7 @@ function renderIndexes(row, results) {
 
     panelHtml += "<td>" + (index.unique ? true : false) + "</td>";
     panelHtml += "<td>" + (index.automatic ? true : false) + "</td>";
-    panelHtml += "<td><button class='btn btn-sm db-action-btn db-action-btn-danger' onclick='dropIndex(\"" + index.name + "\")'><i class='fa fa-minus'></i> Drop Index</button></td></tr>";
+    panelHtml += "<td><button class='btn btn-sm db-action-btn db-action-btn-danger' onclick='dropIndex(\"" + index.name + "\", \"" + row.name.replace(/"/g, "&quot;") + "\")'><i class='fa fa-minus'></i> Drop Index</button></td></tr>";
   }
   return panelHtml;
 }
